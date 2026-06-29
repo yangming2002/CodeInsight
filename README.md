@@ -19,6 +19,7 @@ MVP v0 can:
 - parse changed files from unified diffs ✅️
 - scan local repository structure ✅️
 - review a GitHub PR through one API call ✅️
+- detect Agent/LLM engineering risks with deterministic rules ✅️
 
 ## Quick Start
 
@@ -212,6 +213,9 @@ docs/           Product, architecture, and learning documents
 | `SEC001` | critical | Detect hardcoded secrets |
 | `DBG001` | low | Detect debug `print()` statements |
 | `MTN001` | medium | Detect unresolved TODO/FIXME comments |
+| `LLM001` | high | Detect LLM calls without explicit timeout |
+| `LLM002` | medium | Detect direct JSON parsing of model output without schema validation |
+| `AGT001` | critical | Detect unsafe `shell=True` execution in agent/tool code |
 
 ## Docker
 

@@ -34,3 +34,34 @@ def test_policy_engine_detects_mvp_rules() -> None:
     rule_ids = [finding.rule_id for finding in findings]
 
     assert rule_ids == ["SEC001", "DBG001", "MTN001"]
+
+
+def test_policy_engine_detects_agent_llm_risks() -> None:
+    diff = """diff --git a/core/reasoning/reviewer.py b/core/reasoning/reviewer.py
+--- a/core/reasoning/reviewer.py
++++ b/core/reasoning/reviewer.py
+@@ -1,1 +1,4 @@
++response = client.responses.create(model="gpt-5", input=prompt)
++subprocess.run(command, shell=True)
++payload = json.loads(response.output_text)
+ REVIEWER = "code"
+"""
+
+    findings = PolicyEngine().review(diff)
+    rule_ids = [finding.rule_id for finding in findings]
+
+    assert rule_ids == ["LLM001", "AGT001", "LLM002"]
+
+
+def test_policy_engine_allows_llm_call_with_timeout() -> None:
+    diff = """diff --git a/core/reasoning/reviewer.py b/core/reasoning/reviewer.py
+--- a/core/reasoning/reviewer.py
++++ b/core/reasoning/reviewer.py
+@@ -1,1 +1,2 @@
++response = client.responses.create(model="gpt-5", input=prompt, timeout=30)
+ REVIEWER = "code"
+"""
+
+    findings = PolicyEngine().review(diff)
+
+    assert [finding.rule_id for finding in findings] == []

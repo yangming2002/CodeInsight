@@ -42,6 +42,12 @@ class PolicyEngine:
     _SECRET_PATTERN = re.compile(
         r"(?i)\b(password|passwd|token|secret|api[_-]?key|access[_-]?key)\b\s*[:=]\s*['\"][^'\"]{6,}['\"]"
     )
+    _LLM_CALL_PATTERN = re.compile(
+        r"\b(client\.)?(responses\.create|chat\.completions\.create|messages\.create)\s*\("
+    )
+    _LLM_JSON_LOADS_PATTERN = re.compile(
+        r"\bjson\.loads\s*\(\s*[^)]*(response|content|completion|model_output|llm_output)"
+    )
 
     def review(self, diff: str) -> list[PolicyFinding]:
         findings: list[PolicyFinding] = []
@@ -85,6 +91,39 @@ class PolicyEngine:
                 line=line.line_number,
                 message="The added line contains an unresolved TODO or FIXME marker.",
                 suggestion="Resolve it now or link it to a tracked issue with an owner.",
+            )
+
+        if self._LLM_CALL_PATTERN.search(content) and "timeout" not in content:
+            yield PolicyFinding(
+                rule_id="LLM001",
+                title="LLM call without timeout",
+                severity="high",
+                file=line.file,
+                line=line.line_number,
+                message="The added line appears to call an LLM API without an explicit timeout.",
+                suggestion="Set a request timeout and handle timeout failures before merging.",
+            )
+
+        if "shell=True" in content:
+            yield PolicyFinding(
+                rule_id="AGT001",
+                title="Unsafe shell execution",
+                severity="critical",
+                file=line.file,
+                line=line.line_number,
+                message="The added line enables shell execution, which is risky for agent tools.",
+                suggestion="Use argument-list subprocess calls and enforce an allowlist for tool commands.",
+            )
+
+        if self._LLM_JSON_LOADS_PATTERN.search(content):
+            yield PolicyFinding(
+                rule_id="LLM002",
+                title="Unvalidated LLM JSON parsing",
+                severity="medium",
+                file=line.file,
+                line=line.line_number,
+                message="The added line appears to parse model output as JSON without schema validation.",
+                suggestion="Validate LLM output with a typed schema before using it in application logic.",
             )
 
 

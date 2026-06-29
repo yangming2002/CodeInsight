@@ -20,6 +20,8 @@ The project should combine:
 - PR diff fetching
 - changed-file parsing
 - repository context
+- Python AST parsing
+- symbol extraction
 - deterministic policy rules
 - later LLM reasoning
 - structured review output
@@ -62,6 +64,8 @@ Implemented:
 - PR diff fetching
 - changed-file parsing
 - repository structure scanning
+- Python AST parsing
+- repository symbol extraction
 - Agent / LLM deterministic rules
 - pytest and GitHub Actions CI
 
@@ -154,9 +158,9 @@ When adding rules:
 
 Best next steps:
 
-1. Add Python AST parsing.
-2. Extract functions, classes, and imports from changed files.
-3. Attach repository role and changed-file metadata to findings.
+1. Attach repository role and symbol metadata to findings.
+2. Add import-based related-file lookup.
+3. Extract call-like references from Python AST.
 4. Move policy rule definitions closer to YAML-backed configuration.
 5. Add LLM client abstraction only after context and deterministic policy are stable.
 

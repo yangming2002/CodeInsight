@@ -71,7 +71,27 @@ class RepositoryFileResponse(BaseModel):
     size_bytes: int
 
 
+class RepositorySymbolResponse(BaseModel):
+    name: str
+    kind: str
+    file: str
+    line: int
+    end_line: int | None
+    parent: str | None = None
+
+
+class RepositoryImportResponse(BaseModel):
+    module: str
+    name: str | None
+    alias: str | None
+    file: str
+    line: int
+
+
 class RepositoryStructureResponse(BaseModel):
     root: str
     file_count: int
+    symbol_count: int
     files: list[RepositoryFileResponse]
+    symbols: list[RepositorySymbolResponse]
+    imports: list[RepositoryImportResponse]

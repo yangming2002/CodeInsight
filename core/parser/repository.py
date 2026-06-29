@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from core.parser.python_ast import PythonAstParser, PythonImport, PythonSymbol
+
 
 DEFAULT_EXCLUDED_DIRS = {
     ".git",
@@ -38,16 +40,25 @@ class RepositoryFile:
 class RepositorySnapshot:
     root: str
     files: list[RepositoryFile]
+    symbols: list[PythonSymbol]
+    imports: list[PythonImport]
 
     @property
     def file_count(self) -> int:
         return len(self.files)
 
+    @property
+    def symbol_count(self) -> int:
+        return len(self.symbols)
+
     def to_dict(self) -> dict[str, object]:
         return {
             "root": self.root,
             "file_count": self.file_count,
+            "symbol_count": self.symbol_count,
             "files": [file.to_dict() for file in self.files],
+            "symbols": [symbol.to_dict() for symbol in self.symbols],
+            "imports": [import_.to_dict() for import_ in self.imports],
         }
 
 
@@ -58,6 +69,9 @@ class RepositoryStructureParser:
     def parse(self, root: str | Path) -> RepositorySnapshot:
         root_path = Path(root).resolve()
         files: list[RepositoryFile] = []
+        symbols: list[PythonSymbol] = []
+        imports: list[PythonImport] = []
+        ast_parser = PythonAstParser()
 
         for path in sorted(root_path.rglob("*")):
             if not path.is_file() or self._is_excluded(path, root_path):
@@ -72,8 +86,17 @@ class RepositoryStructureParser:
                     size_bytes=path.stat().st_size,
                 )
             )
+            if path.suffix == ".py":
+                summary = ast_parser.parse_file(path=path, root=root_path)
+                symbols.extend(summary.symbols)
+                imports.extend(summary.imports)
 
-        return RepositorySnapshot(root=root_path.as_posix(), files=files)
+        return RepositorySnapshot(
+            root=root_path.as_posix(),
+            files=files,
+            symbols=symbols,
+            imports=imports,
+        )
 
     def _is_excluded(self, path: Path, root: Path) -> bool:
         relative_parts = path.relative_to(root).parts

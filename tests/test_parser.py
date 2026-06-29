@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from core.parser import RepositoryStructureParser, parse_changed_files
+from core.parser import PythonAstParser, RepositoryStructureParser, parse_changed_files
 
 
 def test_parse_changed_files_tracks_modified_added_deleted_and_renamed_files() -> None:
@@ -60,11 +60,41 @@ def test_repository_structure_parser_skips_excluded_dirs_and_infers_roles(tmp_pa
     files_by_path = {file.path: file for file in snapshot.files}
 
     assert snapshot.file_count == 4
+    assert snapshot.symbol_count == 2
     assert files_by_path["apps/api/main.py"].role == "api"
     assert files_by_path["core/review/service.py"].role == "core"
     assert files_by_path["tests/test_service.py"].role == "test"
     assert files_by_path["docs/guide.md"].role == "docs"
     assert ".venv/ignored.py" not in files_by_path
+    assert {symbol.name for symbol in snapshot.symbols} == {"review", "test_ok"}
+
+
+def test_python_ast_parser_extracts_symbols_and_imports() -> None:
+    source = """import os
+from core.review import service as review_service
+
+class Reviewer:
+    def review(self):
+        return review_service.review()
+
+async def run_review():
+    return Reviewer()
+"""
+
+    summary = PythonAstParser().parse_source(source, file="core/reasoning/reviewer.py")
+
+    symbols = {(symbol.kind, symbol.name, symbol.parent) for symbol in summary.symbols}
+    imports = {(import_.module, import_.name, import_.alias) for import_ in summary.imports}
+
+    assert symbols == {
+        ("class", "Reviewer", None),
+        ("function", "review", "Reviewer"),
+        ("async_function", "run_review", None),
+    }
+    assert imports == {
+        ("os", None, None),
+        ("core.review", "service", "review_service"),
+    }
 
 
 def _write(path: Path, content: str) -> None:

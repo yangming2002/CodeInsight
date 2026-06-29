@@ -11,6 +11,8 @@ CodeInsight is being built as a production-style AI engineering project, not a p
 - GitHub PR diff fetcher.
 - Changed-file parser.
 - Local repository structure parser.
+- Python AST parser for functions, classes, async functions, and imports.
+- Repository symbol extraction.
 - One-call GitHub PR review API.
 - Agent / LLM deterministic review rules.
 - Pytest test suite.
@@ -22,10 +24,10 @@ CodeInsight is being built as a production-style AI engineering project, not a p
 
 ### Repository Context
 
-- Add Python AST parsing.
-- Extract functions, classes, imports, and call-like references.
 - Attach repository role context to review findings.
 - Improve changed-file summaries for multi-file PRs.
+- Extract call-like references from Python AST.
+- Add related-file lookup from imports and symbols.
 
 ### Policy Engine
 
@@ -52,7 +54,7 @@ CodeInsight is being built as a production-style AI engineering project, not a p
 
 ## Later
 
-- Symbol-based retrieval.
+- Import-based related file retrieval.
 - AST-aware context builder.
 - Optional vector retrieval.
 - Dashboard or lightweight report viewer.

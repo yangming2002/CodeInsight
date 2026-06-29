@@ -11,6 +11,7 @@ All notable changes to CodeInsight are documented here.
 - GitHub webhook receiver with optional signature verification.
 - GitHub PR diff fetcher using the GitHub diff media type.
 - Diff changed-file parser and local repository structure parser.
+- Python AST parser and repository symbol extraction.
 - Agent / LLM engineering rules for missing LLM timeouts, unsafe `shell=True`, and unvalidated model JSON parsing.
 - Pytest test suite and GitHub Actions CI.
 - Dockerfile for containerized API startup.

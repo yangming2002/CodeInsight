@@ -20,6 +20,8 @@ MVP v0 can:
 - scan local repository structure ✅️
 - review a GitHub PR through one API call ✅️
 - detect Agent/LLM engineering risks with deterministic rules ✅️
+- parse Python AST for functions, classes, and imports ✅️
+- extract repository symbols for context building ✅️
 
 ## Quick Start
 
@@ -175,7 +177,7 @@ Endpoint:
 GET /repository/structure
 ```
 
-This endpoint scans the local repository and returns a lightweight file inventory with inferred roles such as `api`, `core`, `test`, `docs`, and `config`.
+This endpoint scans the local repository and returns a lightweight file inventory, inferred roles, Python symbols, and Python imports.
 
 ## MVP Architecture
 
@@ -245,10 +247,10 @@ GitHub PR Code Review System
 - Day 2: Implement GitHub webhook receiver. ✅️
 - Day 3: Implement diff fetcher. ✅️
 - Day 4: Build basic repository parser. ✅️
-- Day 5: Integrate basic AST parsing.
-- Day 6: Build symbol extraction.
+- Day 5: Integrate basic AST parsing. ✅️
+- Day 6: Build symbol extraction. ✅️
 - Pipeline v0 without AST/symbol context: PR -> diff -> simple review -> output. ✅️
-- Day 7: End-to-end pipeline v1 with AST/symbol context.
+- Day 7: End-to-end pipeline v1 with AST/symbol context. ✅️
 
 ### Week 2 - Context Engine
 

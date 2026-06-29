@@ -123,4 +123,6 @@ def test_repository_structure_endpoint() -> None:
 
     assert response.status_code == 200
     assert body["file_count"] > 0
+    assert body["symbol_count"] > 0
     assert any(file["path"] == "apps/api/main.py" for file in body["files"])
+    assert any(symbol["name"] == "health" for symbol in body["symbols"])

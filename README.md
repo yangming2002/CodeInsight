@@ -4,14 +4,14 @@ CodeInsight is a GitHub Pull Request code review system built with FastAPI, dete
 
 MVP v0 can:
 
-- start a FastAPI service
-- expose `GET /health`
-- expose `POST /review`
-- accept a unified diff
-- run deterministic policy checks before LLM reasoning
-- return structured JSON findings
-- run automated tests with pytest
-- run CI with GitHub Actions
+- start a FastAPI service ✅️
+- expose `GET /health` ✅️
+- expose `POST /review` ✅️
+- accept a unified diff ✅️
+- run deterministic policy checks before LLM reasoning ✅️
+- return structured JSON findings ✅️
+- run automated tests with pytest ✅️
+- run CI with GitHub Actions ✅️
 
 ## Quick Start
 
@@ -147,7 +147,7 @@ GitHub PR Code Review System
 
 ### Week 1 - Foundation
 
-- Day 1: Initialize repo structure and FastAPI backend.
+- Day 1: Initialize repo structure and FastAPI backend. ✅️
 - Day 2: Implement GitHub webhook receiver.
 - Day 3: Implement diff fetcher.
 - Day 4: Build basic repository parser.

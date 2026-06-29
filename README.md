@@ -247,7 +247,8 @@ GitHub PR Code Review System
 - Day 4: Build basic repository parser. ✅️
 - Day 5: Integrate basic AST parsing.
 - Day 6: Build symbol extraction.
-- Day 7: End-to-end pipeline v0: PR -> diff -> simple review -> output. ✅️
+- Pipeline v0 without AST/symbol context: PR -> diff -> simple review -> output. ✅️
+- Day 7: End-to-end pipeline v1 with AST/symbol context.
 
 ### Week 2 - Context Engine
 

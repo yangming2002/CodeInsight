@@ -1,6 +1,6 @@
 # CodeInsight
 
-CodeInsight is a GitHub Pull Request code review system built with FastAPI, deterministic policy checks, and an LLM-ready review pipeline for learning production-style AI engineering.
+CodeInsight is a GitHub Pull Request code review system built with FastAPI, deterministic policy checks, and an LLM-ready review pipeline for hands-on production-style AI engineering practice.
 
 MVP v0 can:
 

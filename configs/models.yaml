@@ -1,0 +1,26 @@
+version: 1
+
+defaults:
+  provider: openai
+  review_model: unset
+  embedding_model: unset
+  timeout_seconds: 30
+  max_output_tokens: 1200
+
+providers:
+  openai:
+    api_key_env: OPENAI_API_KEY
+    enabled: false
+    notes: Enable when LLM reasoning is implemented.
+
+  local:
+    enabled: false
+    notes: Reserved for future local model experiments.
+
+usage:
+  policy_engine:
+    requires_model: false
+
+  llm_reasoning:
+    requires_model: true
+    status: planned

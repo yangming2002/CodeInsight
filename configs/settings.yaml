@@ -1,0 +1,30 @@
+app:
+  name: CodeInsight
+  environment: development
+  host: 127.0.0.1
+  port: 8000
+
+github:
+  api_base_url: https://api.github.com
+  webhook_secret_env: GITHUB_WEBHOOK_SECRET
+  token_env: GITHUB_TOKEN
+  request_timeout_seconds: 10
+
+review:
+  enable_policy_engine: true
+  enable_llm_reasoning: false
+  max_diff_chars: 120000
+  default_source: policy
+
+repository:
+  excluded_dirs:
+    - .git
+    - .idea
+    - .venv
+    - __pycache__
+    - .pytest_cache
+    - .mypy_cache
+    - .ruff_cache
+    - node_modules
+    - dist
+    - htmlcov

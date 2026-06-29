@@ -1,0 +1,60 @@
+version: 1
+
+rules:
+  - id: SEC001
+    title: Hardcoded secret
+    severity: critical
+    category: security
+    status: implemented
+    description: Detect likely hardcoded credentials in added lines.
+
+  - id: DBG001
+    title: Debug print statement
+    severity: low
+    category: maintainability
+    status: implemented
+    description: Detect debug print statements in added lines.
+
+  - id: MTN001
+    title: Unresolved TODO or FIXME
+    severity: medium
+    category: maintainability
+    status: implemented
+    description: Detect unresolved TODO or FIXME comments.
+
+  - id: LLM001
+    title: LLM call without timeout
+    severity: high
+    category: llm-reliability
+    status: implemented
+    description: Detect likely LLM API calls without an explicit timeout.
+
+  - id: LLM002
+    title: Unvalidated LLM JSON parsing
+    severity: medium
+    category: llm-safety
+    status: implemented
+    description: Detect direct JSON parsing of likely model output without schema validation.
+
+  - id: AGT001
+    title: Unsafe shell execution
+    severity: critical
+    category: agent-safety
+    status: implemented
+    description: Detect shell=True in added code.
+
+planned_rules:
+  - id: ARCH001
+    title: API layer bypasses service boundary
+    category: architecture
+    description: Detect direct infrastructure calls from API handlers.
+
+  - id: LLM003
+    title: LLM call without retry or fallback
+    category: llm-reliability
+    description: Detect LLM calls that lack retry or fallback policy.
+
+  - id: EVAL001
+    title: Evaluation dataset missing for reviewer change
+    category: evaluation
+    description: Detect reasoning changes without evaluation coverage.

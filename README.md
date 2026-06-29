@@ -1,4 +1,143 @@
-# CodeInsight - 30 Day Vibe Coding Plan
+# CodeInsight
+
+CodeInsight is a GitHub Pull Request code review system built with FastAPI, deterministic policy checks, and an LLM-ready review pipeline.
+
+MVP v0 can:
+
+- start a FastAPI service
+- expose `GET /health`
+- expose `POST /review`
+- accept a unified diff
+- run deterministic policy checks before LLM reasoning
+- return structured JSON findings
+- run automated tests with pytest
+- run CI with GitHub Actions
+
+## Quick Start
+
+Install dependencies:
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+Run tests:
+
+```bash
+python -m pytest
+```
+
+Start the API:
+
+```bash
+uvicorn apps.api.main:app --reload
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## Review API
+
+Example request:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/review" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "repository": "yangming2002/CodeInsight",
+    "pr_number": 1,
+    "diff": "diff --git a/app.py b/app.py\n--- a/app.py\n+++ b/app.py\n@@ -1,1 +1,3 @@\n+password = \"super-secret-value\"\n+print(\"debug\")\n return True"
+  }'
+```
+
+Example response:
+
+```json
+{
+  "repository": "yangming2002/CodeInsight",
+  "pr_number": 1,
+  "summary": "Policy review found 2 issue(s) in the submitted diff.",
+  "findings": [
+    {
+      "rule_id": "SEC001",
+      "title": "Hardcoded secret",
+      "severity": "critical",
+      "file": "app.py",
+      "line": 1,
+      "message": "The added line appears to contain a hardcoded credential.",
+      "suggestion": "Move secrets to environment variables or a managed secret store.",
+      "source": "policy"
+    },
+    {
+      "rule_id": "DBG001",
+      "title": "Debug print statement",
+      "severity": "low",
+      "file": "app.py",
+      "line": 2,
+      "message": "The added line contains a print statement that may be leftover debugging code.",
+      "suggestion": "Use structured logging or remove the statement before merging.",
+      "source": "policy"
+    }
+  ],
+  "finding_count": 2,
+  "llm_summary": "LLM reasoning is not enabled in MVP v0."
+}
+```
+
+## MVP Architecture
+
+```text
+HTTP Client
+    |
+    v
+apps/api
+    |
+    v
+core/review
+    |
+    v
+core/policy
+    |
+    v
+Structured JSON Report
+```
+
+## Project Structure
+
+```text
+apps/api/       FastAPI application and API schemas
+core/policy/    Deterministic rule engine
+core/review/    Review orchestration service
+tests/          API and policy tests
+docs/           Product, architecture, and learning documents
+```
+
+## Current Policy Rules
+
+| Rule | Severity | Purpose |
+| --- | --- | --- |
+| `SEC001` | critical | Detect hardcoded secrets |
+| `DBG001` | low | Detect debug `print()` statements |
+| `MTN001` | medium | Detect unresolved TODO/FIXME comments |
+
+## Docker
+
+Build:
+
+```bash
+docker build -t codeinsight .
+```
+
+Run:
+
+```bash
+docker run --rm -p 8000:8000 codeinsight
+```
+
+## 30 Day Vibe Coding Plan
 
 Goal:
 Build a production-ready Code Intelligence Platform starting from zero.
@@ -6,125 +145,36 @@ Build a production-ready Code Intelligence Platform starting from zero.
 Primary Feature:
 GitHub PR Code Review System
 
----
+### Week 1 - Foundation
 
-# Week 1 - Foundation (Core System)
+- Day 1: Initialize repo structure and FastAPI backend.
+- Day 2: Implement GitHub webhook receiver.
+- Day 3: Implement diff fetcher.
+- Day 4: Build basic repository parser.
+- Day 5: Integrate basic AST parsing.
+- Day 6: Build symbol extraction.
+- Day 7: End-to-end pipeline v0: PR -> diff -> simple review -> output.
 
-## Day 1
-- Initialize repo structure
-- Setup FastAPI backend
-- Setup basic project modules
+### Week 2 - Context Engine
 
-## Day 2
-- Implement GitHub webhook receiver
-- Parse PR events
+- Add embedding-based retrieval.
+- Add symbol-based retrieval.
+- Build AST-based context extraction.
+- Add hybrid ranking.
+- Build context builder.
 
-## Day 3
-- Implement diff fetcher
-- Normalize diff format
+### Week 3 - Reasoning Layer
 
-## Day 4
-- Build basic repository parser
-- Extract file structure
+- Build single reviewer.
+- Add bug, security, architecture, and performance analysis.
+- Merge reasoning outputs.
+- Generate structured reports.
 
-## Day 5
-- Integrate tree-sitter (basic AST parsing)
+### Week 4 - Productization
 
-## Day 6
-- Build symbol extraction system
-
-## Day 7
-- End-to-end pipeline v0:
-  PR → diff → simple review → output
-
----
-
-# Week 2 - Context Engine
-
-## Day 8
-- Implement embedding-based retrieval
-
-## Day 9
-- Add symbol-based retrieval
-
-## Day 10
-- Build AST-based context extraction
-
-## Day 11
-- Add hybrid ranking system
-
-## Day 12
-- Build context builder module
-
-## Day 13
-- Improve retrieval accuracy
-
-## Day 14
-- Context Engine v1 complete
-
----
-
-# Week 3 - Reasoning Layer
-
-## Day 15
-- Build single brain reviewer
-
-## Day 16
-- Add bug detection module
-
-## Day 17
-- Add security analysis module
-
-## Day 18
-- Add architecture analysis module
-
-## Day 19
-- Add performance analysis module
-
-## Day 20
-- Merge reasoning outputs
-
-## Day 21
-- Structured review report system
-
----
-
-# Week 4 - Productization
-
-## Day 22
-- Build rule engine (YAML-based)
-
-## Day 23
-- Add policy validation before LLM
-
-## Day 24
-- GitHub PR comment integration
-
-## Day 25
-- Add structured JSON output API
-
-## Day 26
-- Build basic dashboard (optional)
-
-## Day 27
-- Add evaluation dataset
-
-## Day 28
-- Improve hallucination control
-
-## Day 29
-- Optimize latency and caching
-
-## Day 30
-- Release v1.0 MVP
-
----
-
-# Final Output
-
-A system that can:
-- automatically review PRs
-- detect bugs and security issues
-- enforce engineering rules
-- generate structured reports
-- integrate into GitHub workflow
+- Build YAML rule engine.
+- Add policy validation before LLM.
+- Integrate GitHub PR comments.
+- Add evaluation dataset.
+- Optimize latency and caching.
+- Release v1.0 MVP.

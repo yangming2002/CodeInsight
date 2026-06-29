@@ -44,3 +44,10 @@ class GitHubWebhookResponse(BaseModel):
     task_id: str
     ignored: bool = False
     ignore_reason: str | None = None
+
+
+class PullRequestDiffResponse(BaseModel):
+    repository: str
+    pr_number: int
+    diff: str
+    source_url: str

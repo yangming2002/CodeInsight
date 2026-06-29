@@ -15,6 +15,7 @@ MVP v0 can:
 - receive GitHub webhook events ✅️
 - parse pull request webhook payloads ✅️
 - verify GitHub webhook signatures when `GITHUB_WEBHOOK_SECRET` is configured ✅️
+- fetch GitHub pull request diffs ✅️
 
 ## Quick Start
 
@@ -131,6 +132,27 @@ MVP v0 supports `pull_request` events and returns a structured task envelope:
 }
 ```
 
+## GitHub Diff API
+
+Endpoint:
+
+```text
+GET /github/pull-diff?repository=owner/repo&pr_number=1
+```
+
+If `GITHUB_TOKEN` is configured, CodeInsight sends it as a bearer token when calling GitHub.
+
+Example response:
+
+```json
+{
+  "repository": "owner/repo",
+  "pr_number": 1,
+  "diff": "diff --git a/app.py b/app.py\n...",
+  "source_url": "https://api.github.com/repos/owner/repo/pulls/1"
+}
+```
+
 ## MVP Architecture
 
 ```text
@@ -193,7 +215,7 @@ GitHub PR Code Review System
 
 - Day 1: Initialize repo structure and FastAPI backend. ✅️
 - Day 2: Implement GitHub webhook receiver. ✅️
-- Day 3: Implement diff fetcher.
+- Day 3: Implement diff fetcher. ✅️
 - Day 4: Build basic repository parser.
 - Day 5: Integrate basic AST parsing.
 - Day 6: Build symbol extraction.

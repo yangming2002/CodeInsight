@@ -6,10 +6,11 @@ from fastapi import FastAPI, Header, HTTPException, Request, status
 from apps.api.schemas import (
     GitHubWebhookResponse,
     HealthResponse,
+    PullRequestDiffResponse,
     ReviewRequest,
     ReviewResponse,
 )
-from core.github import parse_webhook, verify_signature
+from core.github import GitHubDiffError, GitHubDiffFetcher, parse_webhook, verify_signature
 from core.review.service import review_diff
 
 
@@ -29,6 +30,21 @@ def health() -> HealthResponse:
 def review(request: ReviewRequest) -> ReviewResponse:
     report = review_diff(diff=request.diff, repository=request.repository, pr_number=request.pr_number)
     return ReviewResponse(**report)
+
+
+@app.get("/github/pull-diff", response_model=PullRequestDiffResponse)
+def pull_request_diff(repository: str, pr_number: int) -> PullRequestDiffResponse:
+    token = os.getenv("GITHUB_TOKEN")
+    fetcher = GitHubDiffFetcher(token=token)
+
+    try:
+        diff = fetcher.fetch_pull_request_diff(repository=repository, pr_number=pr_number)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except GitHubDiffError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return PullRequestDiffResponse(**diff.to_dict())
 
 
 @app.post(

@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException, Request, status
 
@@ -7,10 +8,12 @@ from apps.api.schemas import (
     GitHubWebhookResponse,
     HealthResponse,
     PullRequestDiffResponse,
+    RepositoryStructureResponse,
     ReviewRequest,
     ReviewResponse,
 )
 from core.github import GitHubDiffError, GitHubDiffFetcher, parse_webhook, verify_signature
+from core.parser import RepositoryStructureParser
 from core.review.service import review_diff
 
 
@@ -45,6 +48,28 @@ def pull_request_diff(repository: str, pr_number: int) -> PullRequestDiffRespons
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return PullRequestDiffResponse(**diff.to_dict())
+
+
+@app.get("/github/review-pr", response_model=ReviewResponse)
+def review_pull_request(repository: str, pr_number: int) -> ReviewResponse:
+    token = os.getenv("GITHUB_TOKEN")
+    fetcher = GitHubDiffFetcher(token=token)
+
+    try:
+        diff = fetcher.fetch_pull_request_diff(repository=repository, pr_number=pr_number)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except GitHubDiffError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    report = review_diff(diff=diff.diff, repository=diff.repository, pr_number=diff.pr_number)
+    return ReviewResponse(**report)
+
+
+@app.get("/repository/structure", response_model=RepositoryStructureResponse)
+def repository_structure() -> RepositoryStructureResponse:
+    snapshot = RepositoryStructureParser().parse(Path.cwd())
+    return RepositoryStructureResponse(**snapshot.to_dict())
 
 
 @app.post(

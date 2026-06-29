@@ -23,10 +23,21 @@ class Finding(BaseModel):
     source: str = "policy"
 
 
+class ChangedFile(BaseModel):
+    path: str
+    old_path: str | None
+    new_path: str | None
+    status: str
+    added_lines: int
+    deleted_lines: int
+
+
 class ReviewResponse(BaseModel):
     repository: str | None
     pr_number: int | None
     summary: str
+    changed_files: list[ChangedFile]
+    changed_file_count: int
     findings: list[Finding]
     finding_count: int
     llm_summary: str | None = None
@@ -51,3 +62,16 @@ class PullRequestDiffResponse(BaseModel):
     pr_number: int
     diff: str
     source_url: str
+
+
+class RepositoryFileResponse(BaseModel):
+    path: str
+    extension: str
+    role: str
+    size_bytes: int
+
+
+class RepositoryStructureResponse(BaseModel):
+    root: str
+    file_count: int
+    files: list[RepositoryFileResponse]

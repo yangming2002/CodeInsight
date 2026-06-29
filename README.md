@@ -16,6 +16,9 @@ MVP v0 can:
 - parse pull request webhook payloads ✅️
 - verify GitHub webhook signatures when `GITHUB_WEBHOOK_SECRET` is configured ✅️
 - fetch GitHub pull request diffs ✅️
+- parse changed files from unified diffs ✅️
+- scan local repository structure ✅️
+- review a GitHub PR through one API call ✅️
 
 ## Quick Start
 
@@ -153,6 +156,26 @@ Example response:
 }
 ```
 
+## GitHub PR Review API
+
+Endpoint:
+
+```text
+GET /github/review-pr?repository=owner/repo&pr_number=1
+```
+
+This endpoint fetches a GitHub PR diff, parses changed files, runs the policy engine, and returns a structured review report.
+
+## Repository Structure API
+
+Endpoint:
+
+```text
+GET /repository/structure
+```
+
+This endpoint scans the local repository and returns a lightweight file inventory with inferred roles such as `api`, `core`, `test`, `docs`, and `config`.
+
 ## MVP Architecture
 
 ```text
@@ -175,6 +198,7 @@ Structured JSON Report
 
 ```text
 apps/api/       FastAPI application and API schemas
+core/parser/    Diff and repository structure parsing
 core/policy/    Deterministic rule engine
 core/review/    Review orchestration service
 tests/          API and policy tests
@@ -216,10 +240,10 @@ GitHub PR Code Review System
 - Day 1: Initialize repo structure and FastAPI backend. ✅️
 - Day 2: Implement GitHub webhook receiver. ✅️
 - Day 3: Implement diff fetcher. ✅️
-- Day 4: Build basic repository parser.
+- Day 4: Build basic repository parser. ✅️
 - Day 5: Integrate basic AST parsing.
 - Day 6: Build symbol extraction.
-- Day 7: End-to-end pipeline v0: PR -> diff -> simple review -> output.
+- Day 7: End-to-end pipeline v0: PR -> diff -> simple review -> output. ✅️
 
 ### Week 2 - Context Engine
 

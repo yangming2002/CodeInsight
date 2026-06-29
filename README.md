@@ -12,6 +12,9 @@ MVP v0 can:
 - return structured JSON findings ✅️
 - run automated tests with pytest ✅️
 - run CI with GitHub Actions ✅️
+- receive GitHub webhook events ✅️
+- parse pull request webhook payloads ✅️
+- verify GitHub webhook signatures when `GITHUB_WEBHOOK_SECRET` is configured ✅️
 
 ## Quick Start
 
@@ -87,6 +90,47 @@ Example response:
 }
 ```
 
+## GitHub Webhook API
+
+Endpoint:
+
+```text
+POST /webhooks/github
+```
+
+Required GitHub headers:
+
+```text
+X-GitHub-Event
+X-GitHub-Delivery
+```
+
+Optional security header:
+
+```text
+X-Hub-Signature-256
+```
+
+If `GITHUB_WEBHOOK_SECRET` is configured, CodeInsight verifies `X-Hub-Signature-256` before parsing the payload.
+
+MVP v0 supports `pull_request` events and returns a structured task envelope:
+
+```json
+{
+  "accepted": true,
+  "event": "pull_request",
+  "delivery_id": "delivery-1",
+  "action": "opened",
+  "repository": "yangming2002/CodeInsight",
+  "pr_number": 12,
+  "base_sha": "base123",
+  "head_sha": "head456",
+  "task_id": "gh_...",
+  "ignored": false,
+  "ignore_reason": null
+}
+```
+
 ## MVP Architecture
 
 ```text
@@ -148,7 +192,7 @@ GitHub PR Code Review System
 ### Week 1 - Foundation
 
 - Day 1: Initialize repo structure and FastAPI backend. ✅️
-- Day 2: Implement GitHub webhook receiver.
+- Day 2: Implement GitHub webhook receiver. ✅️
 - Day 3: Implement diff fetcher.
 - Day 4: Build basic repository parser.
 - Day 5: Integrate basic AST parsing.

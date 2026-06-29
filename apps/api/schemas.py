@@ -30,3 +30,17 @@ class ReviewResponse(BaseModel):
     findings: list[Finding]
     finding_count: int
     llm_summary: str | None = None
+
+
+class GitHubWebhookResponse(BaseModel):
+    accepted: bool
+    event: str
+    delivery_id: str
+    action: str | None
+    repository: str | None
+    pr_number: int | None
+    base_sha: str | None
+    head_sha: str | None
+    task_id: str
+    ignored: bool = False
+    ignore_reason: str | None = None

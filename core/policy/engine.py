@@ -4,6 +4,8 @@ import re
 from dataclasses import dataclass
 from typing import Iterable
 
+from core.policy.config import RuleConfig
+
 
 @dataclass(frozen=True)
 class DiffLine:
@@ -49,6 +51,9 @@ class PolicyEngine:
         r"\bjson\.loads\s*\(\s*[^)]*(response|content|completion|model_output|llm_output)"
     )
 
+    def __init__(self, rule_config: RuleConfig | None = None) -> None:
+        self._rule_config = rule_config or RuleConfig.load()
+
     def review(self, diff: str) -> list[PolicyFinding]:
         findings: list[PolicyFinding] = []
 
@@ -61,10 +66,8 @@ class PolicyEngine:
         content = line.content.strip()
 
         if self._SECRET_PATTERN.search(content):
-            yield PolicyFinding(
+            yield self._finding(
                 rule_id="SEC001",
-                title="Hardcoded secret",
-                severity="critical",
                 file=line.file,
                 line=line.line_number,
                 message="The added line appears to contain a hardcoded credential.",
@@ -72,10 +75,8 @@ class PolicyEngine:
             )
 
         if "print(" in content:
-            yield PolicyFinding(
+            yield self._finding(
                 rule_id="DBG001",
-                title="Debug print statement",
-                severity="low",
                 file=line.file,
                 line=line.line_number,
                 message="The added line contains a print statement that may be leftover debugging code.",
@@ -83,10 +84,8 @@ class PolicyEngine:
             )
 
         if "TODO" in content.upper() or "FIXME" in content.upper():
-            yield PolicyFinding(
+            yield self._finding(
                 rule_id="MTN001",
-                title="Unresolved TODO or FIXME",
-                severity="medium",
                 file=line.file,
                 line=line.line_number,
                 message="The added line contains an unresolved TODO or FIXME marker.",
@@ -94,10 +93,8 @@ class PolicyEngine:
             )
 
         if self._LLM_CALL_PATTERN.search(content) and "timeout" not in content:
-            yield PolicyFinding(
+            yield self._finding(
                 rule_id="LLM001",
-                title="LLM call without timeout",
-                severity="high",
                 file=line.file,
                 line=line.line_number,
                 message="The added line appears to call an LLM API without an explicit timeout.",
@@ -105,10 +102,8 @@ class PolicyEngine:
             )
 
         if "shell=True" in content:
-            yield PolicyFinding(
+            yield self._finding(
                 rule_id="AGT001",
-                title="Unsafe shell execution",
-                severity="critical",
                 file=line.file,
                 line=line.line_number,
                 message="The added line enables shell execution, which is risky for agent tools.",
@@ -116,15 +111,32 @@ class PolicyEngine:
             )
 
         if self._LLM_JSON_LOADS_PATTERN.search(content):
-            yield PolicyFinding(
+            yield self._finding(
                 rule_id="LLM002",
-                title="Unvalidated LLM JSON parsing",
-                severity="medium",
                 file=line.file,
                 line=line.line_number,
                 message="The added line appears to parse model output as JSON without schema validation.",
                 suggestion="Validate LLM output with a typed schema before using it in application logic.",
             )
+
+    def _finding(
+        self,
+        rule_id: str,
+        file: str,
+        line: int | None,
+        message: str,
+        suggestion: str,
+    ) -> PolicyFinding:
+        metadata = self._rule_config.get(rule_id)
+        return PolicyFinding(
+            rule_id=rule_id,
+            title=metadata.title,
+            severity=metadata.severity,
+            file=file,
+            line=line,
+            message=message,
+            suggestion=suggestion,
+        )
 
 
 def parse_added_lines(diff: str) -> list[DiffLine]:

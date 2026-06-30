@@ -1,6 +1,6 @@
 # CodeInsight Development Handoff
 
-Last updated: 2026-06-29
+Last updated: 2026-06-30
 
 This document preserves the current project state so development can continue later without relying on chat history.
 
@@ -99,6 +99,18 @@ Agent / LLM rules:
 - `LLM002`: likely model output parsed with `json.loads(...)` without schema validation
 - `AGT001`: unsafe `shell=True`
 
+Rule metadata is now loaded through `core/policy/config.py` from:
+
+```text
+configs/rules.yaml
+```
+
+Current scope:
+
+- Detection logic still lives in Python code.
+- YAML controls implemented rule metadata such as title, severity, category, status, and description.
+- This is intentionally not a full rule DSL yet.
+
 ### Review Pipeline
 
 Implemented in `core/review/service.py`:
@@ -111,9 +123,20 @@ Implemented in `core/review/service.py`:
   - PR number
   - summary
   - changed files
+  - review context
   - findings
   - finding count
   - LLM placeholder summary
+
+### Review Context
+
+Implemented in `core/context/`:
+
+- Builds lightweight PR review context from changed files and repository snapshots.
+- Adds changed-file role summaries.
+- Adds touched Python symbols for changed files.
+- Adds related imports for changed files.
+- Attaches file-level context metadata to each finding.
 
 ### Testing / CI
 
@@ -126,7 +149,7 @@ python -m pytest
 Last known result:
 
 ```text
-21 passed, 1 warning
+24 passed, 1 warning
 ```
 
 The warning is from FastAPI / Starlette TestClient dependency behavior and does not currently affect project behavior.
@@ -263,18 +286,19 @@ source
 
 ## Recommended Next Development
 
-Best next step:
+Completed next step:
 
 ```text
 Attach context metadata to findings.
 ```
 
-Concrete implementation idea:
+Implemented shape:
 
-1. When `/review` runs, it already knows changed files.
-2. Repository parser can now produce roles, symbols, and imports.
-3. Add a lightweight `core/context/` module that builds review context.
-4. Include context summary in review output.
+1. `/review` parses changed files from the diff.
+2. `RepositoryStructureParser` produces roles, symbols, and imports.
+3. `core/context/` builds a lightweight review context.
+4. Review output includes a top-level context summary.
+5. Each finding includes file-level context metadata.
 
 Possible next API/report fields:
 
@@ -288,22 +312,29 @@ Possible next API/report fields:
 }
 ```
 
-Alternative next step:
+Completed next step:
 
 ```text
 Move deterministic rules toward YAML-backed configuration.
 ```
 
-This would connect `configs/rules.yaml` to `core/policy/engine.py`.
+Implemented as YAML-backed rule metadata while keeping detection logic deterministic and code-owned.
+
+Best next step now:
+
+```text
+Make context extraction more precise.
+```
+
+This would use changed line ranges to distinguish symbols that are directly touched from symbols that merely live in changed files.
 
 ## Near-Term Backlog
 
 High-value next tasks:
 
-- Add `core/context/` module.
-- Attach repository role metadata to findings.
-- Attach changed-file summaries to findings.
+- Use changed line ranges to identify directly touched symbols.
 - Add import-based related-file lookup.
+- Add config validation errors for malformed rule metadata.
 - Extract call-like references from Python AST.
 - Add confidence/source fields for future LLM findings.
 - Start an evaluation dataset under `evaluation/datasets`.
@@ -344,5 +375,4 @@ core/review/service.py
 
 Suggested first question next session:
 
-> Continue by adding `core/context/` to attach repository role, symbol, and import context to review reports.
-
+> Continue by making context extraction more precise with changed line ranges and directly touched symbols.

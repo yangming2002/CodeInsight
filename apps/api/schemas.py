@@ -21,6 +21,7 @@ class Finding(BaseModel):
     message: str
     suggestion: str
     source: str = "policy"
+    context: dict[str, object] | None = None
 
 
 class ChangedFile(BaseModel):
@@ -32,12 +33,30 @@ class ChangedFile(BaseModel):
     deleted_lines: int
 
 
+class ReviewContextFile(BaseModel):
+    path: str
+    role: str
+    status: str
+    added_lines: int
+    deleted_lines: int
+    symbols: list[dict[str, object]]
+    imports: list[dict[str, object]]
+
+
+class ReviewContext(BaseModel):
+    changed_file_roles: list[str]
+    touched_symbols: list[str]
+    related_imports: list[str]
+    files: list[ReviewContextFile]
+
+
 class ReviewResponse(BaseModel):
     repository: str | None
     pr_number: int | None
     summary: str
     changed_files: list[ChangedFile]
     changed_file_count: int
+    context: ReviewContext
     findings: list[Finding]
     finding_count: int
     llm_summary: str | None = None

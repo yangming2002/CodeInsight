@@ -1,3 +1,6 @@
+import yaml
+
+from core.policy import RuleConfig
 from core.policy.engine import PolicyEngine, parse_added_lines
 
 
@@ -65,3 +68,37 @@ def test_policy_engine_allows_llm_call_with_timeout() -> None:
     findings = PolicyEngine().review(diff)
 
     assert [finding.rule_id for finding in findings] == []
+
+
+def test_policy_engine_uses_rule_metadata_from_yaml(tmp_path) -> None:
+    config_path = tmp_path / "rules.yaml"
+    config_path.write_text(
+        yaml.safe_dump(
+            {
+                "version": 1,
+                "rules": [
+                    {
+                        "id": "DBG001",
+                        "title": "Temporary stdout debug",
+                        "severity": "medium",
+                        "category": "maintainability",
+                        "status": "implemented",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    diff = """diff --git a/service.py b/service.py
+--- a/service.py
++++ b/service.py
+@@ -1,1 +1,2 @@
++print("debug")
+ return True
+"""
+
+    findings = PolicyEngine(rule_config=RuleConfig.load(config_path)).review(diff)
+
+    assert findings[0].rule_id == "DBG001"
+    assert findings[0].title == "Temporary stdout debug"
+    assert findings[0].severity == "medium"

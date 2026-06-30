@@ -1,27 +1,37 @@
 # CodeInsight
 
-CodeInsight is a GitHub Pull Request code review system built with FastAPI, deterministic policy checks, and an LLM-ready review pipeline for hands-on production-style AI engineering practice.
+CodeInsight is a GitHub Pull Request review system for Agent and LLM engineering projects. It combines deterministic policy checks, repository context extraction, and structured review reports so later LLM reasoning can operate on traceable inputs instead of raw diffs alone.
 
-MVP v0 can:
+## Capability Status
 
-- start a FastAPI service ✅️
-- expose `GET /health` ✅️
-- expose `POST /review` ✅️
-- accept a unified diff ✅️
-- run deterministic policy checks before LLM reasoning ✅️
-- return structured JSON findings ✅️
-- run automated tests with pytest ✅️
-- run CI with GitHub Actions ✅️
-- receive GitHub webhook events ✅️
-- parse pull request webhook payloads ✅️
-- verify GitHub webhook signatures when `GITHUB_WEBHOOK_SECRET` is configured ✅️
-- fetch GitHub pull request diffs ✅️
-- parse changed files from unified diffs ✅️
-- scan local repository structure ✅️
-- review a GitHub PR through one API call ✅️
-- detect Agent/LLM engineering risks with deterministic rules ✅️
-- parse Python AST for functions, classes, and imports ✅️
-- extract repository symbols for context building ✅️
+### Currently Implemented
+
+| Area | Capability |
+| --- | --- |
+| API service | FastAPI application with `GET /health`, `POST /review`, `POST /webhooks/github`, `GET /github/pull-diff`, `GET /github/review-pr`, and `GET /repository/structure` |
+| GitHub integration | Parse pull request webhook payloads, optionally verify webhook signatures, and fetch pull request diffs with optional `GITHUB_TOKEN` |
+| Diff parsing | Parse changed files, statuses, added/deleted line counts, and added line numbers from unified diffs |
+| Repository parsing | Scan local repository files, infer file roles, and skip common generated or dependency directories |
+| Python AST parsing | Extract Python classes, functions, async functions, parent relationships, and imports |
+| Review context | Attach changed-file roles, related imports, and directly touched symbols to structured review reports |
+| Policy engine | Run deterministic checks before LLM reasoning |
+| Rule metadata | Load implemented rule titles, severities, categories, and descriptions from `configs/rules.yaml` |
+| Agent/LLM rules | Detect LLM calls without timeout, unsafe `shell=True`, and unvalidated JSON parsing of likely model output |
+| Generic rules | Detect likely hardcoded secrets, debug `print()` statements, and unresolved TODO/FIXME comments |
+| Output | Return structured JSON findings with rule id, severity, file, line, message, suggestion, source, and context |
+| Testing and CI | Run automated tests with pytest and GitHub Actions |
+
+### Planned
+
+| Area | Future Capability |
+| --- | --- |
+| Context precision | Expand changed-line and symbol matching, add import-based related-file lookup, and extract call-like references |
+| Rule system | Add validation for malformed rule metadata and gradually support project-specific configurable policies |
+| GitHub review workflow | Publish structured findings as GitHub PR comments |
+| LLM reasoning | Add LLM reviewer stages after deterministic context and policy inputs are stable |
+| Evaluation harness | Build review datasets, replay fixed diffs, compare expected findings, and measure hit rate, false positives, latency, and cost |
+| Reliability | Add async worker execution, retries, caching, and cost/latency tracking |
+| Deployment | Add production-oriented deployment docs and service packaging |
 
 ## Quick Start
 
@@ -70,6 +80,34 @@ Example response:
   "repository": "yangming2002/CodeInsight",
   "pr_number": 1,
   "summary": "Policy review found 2 issue(s) in the submitted diff.",
+  "changed_files": [
+    {
+      "path": "app.py",
+      "old_path": "app.py",
+      "new_path": "app.py",
+      "status": "modified",
+      "added_lines": 2,
+      "deleted_lines": 0
+    }
+  ],
+  "changed_file_count": 1,
+  "context": {
+    "changed_file_roles": ["unknown"],
+    "touched_symbols": [],
+    "related_imports": [],
+    "files": [
+      {
+        "path": "app.py",
+        "role": "unknown",
+        "status": "modified",
+        "added_lines": 2,
+        "deleted_lines": 0,
+        "symbols": [],
+        "touched_symbols": [],
+        "imports": []
+      }
+    ]
+  },
   "findings": [
     {
       "rule_id": "SEC001",
@@ -79,7 +117,12 @@ Example response:
       "line": 1,
       "message": "The added line appears to contain a hardcoded credential.",
       "suggestion": "Move secrets to environment variables or a managed secret store.",
-      "source": "policy"
+      "source": "policy",
+      "context": {
+        "file_role": "unknown",
+        "touched_symbols": [],
+        "related_imports": []
+      }
     },
     {
       "rule_id": "DBG001",
@@ -89,11 +132,16 @@ Example response:
       "line": 2,
       "message": "The added line contains a print statement that may be leftover debugging code.",
       "suggestion": "Use structured logging or remove the statement before merging.",
-      "source": "policy"
+      "source": "policy",
+      "context": {
+        "file_role": "unknown",
+        "touched_symbols": [],
+        "related_imports": []
+      }
     }
   ],
   "finding_count": 2,
-  "llm_summary": "LLM reasoning is not enabled in MVP v0."
+  "llm_summary": "LLM reasoning is not enabled yet."
 }
 ```
 
@@ -120,7 +168,7 @@ X-Hub-Signature-256
 
 If `GITHUB_WEBHOOK_SECRET` is configured, CodeInsight verifies `X-Hub-Signature-256` before parsing the payload.
 
-MVP v0 supports `pull_request` events and returns a structured task envelope:
+CodeInsight supports `pull_request` events and returns a structured task envelope:
 
 ```json
 {
@@ -167,7 +215,7 @@ Endpoint:
 GET /github/review-pr?repository=owner/repo&pr_number=1
 ```
 
-This endpoint fetches a GitHub PR diff, parses changed files, runs the policy engine, and returns a structured review report.
+This endpoint fetches a GitHub PR diff, parses changed files, builds review context, runs the policy engine, and returns a structured review report.
 
 ## Repository Structure API
 
@@ -179,7 +227,7 @@ GET /repository/structure
 
 This endpoint scans the local repository and returns a lightweight file inventory, inferred roles, Python symbols, and Python imports.
 
-## MVP Architecture
+## Architecture
 
 ```text
 HTTP Client
@@ -191,7 +239,7 @@ apps/api
 core/review
     |
     v
-core/policy
+core/context + core/policy
     |
     v
 Structured JSON Report
@@ -202,9 +250,11 @@ Structured JSON Report
 ```text
 apps/api/       FastAPI application and API schemas
 core/parser/    Diff and repository structure parsing
-core/policy/    Deterministic rule engine
+core/context/   Review context construction
+core/policy/    Deterministic rule engine and rule metadata loading
 core/review/    Review orchestration service
-tests/          API and policy tests
+configs/        Runtime configuration and rule metadata
+tests/          API, parser, context, and policy tests
 docs/           Product, architecture, and learning documents
 ```
 
@@ -218,6 +268,26 @@ docs/           Product, architecture, and learning documents
 | `LLM001` | high | Detect LLM calls without explicit timeout |
 | `LLM002` | medium | Detect direct JSON parsing of model output without schema validation |
 | `AGT001` | critical | Detect unsafe `shell=True` execution in agent/tool code |
+
+Rule metadata is loaded from:
+
+```text
+configs/rules.yaml
+```
+
+## Evaluation Harness Status
+
+CodeInsight currently has normal automated tests, but it does not yet have a dedicated review evaluation harness.
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Pytest unit/API tests | Implemented | Validates parser, context, policy, and API behavior |
+| GitHub Actions CI | Implemented | Runs the automated test suite |
+| Evaluation dataset | Planned | Should contain fixed diffs or PR fixtures with expected findings |
+| Review replay harness | Planned | Should run CodeInsight against stored samples and compare structured output |
+| Metrics reporting | Planned | Should track hit rate, false positives, false negatives, latency, and eventually LLM cost |
+
+The harness should be separate from ordinary tests: tests protect implementation correctness, while the evaluation harness should measure review quality over realistic examples.
 
 ## Docker
 
@@ -233,45 +303,12 @@ Run:
 docker run --rm -p 8000:8000 codeinsight
 ```
 
-## 30 Day Vibe Coding Plan
+## Development Direction
 
-Goal:
-Build a production-ready Code Intelligence Platform starting from zero.
-
-Primary Feature:
-GitHub PR Code Review System
-
-### Week 1 - Foundation
-
-- Day 1: Initialize repo structure and FastAPI backend. ✅️
-- Day 2: Implement GitHub webhook receiver. ✅️
-- Day 3: Implement diff fetcher. ✅️
-- Day 4: Build basic repository parser. ✅️
-- Day 5: Integrate basic AST parsing. ✅️
-- Day 6: Build symbol extraction. ✅️
-- Pipeline v0 without AST/symbol context: PR -> diff -> simple review -> output. ✅️
-- Day 7: End-to-end pipeline v1 with AST/symbol context. ✅️
-
-### Week 2 - Context Engine
-
-- Add embedding-based retrieval.
-- Add symbol-based retrieval.
-- Build AST-based context extraction.
-- Add hybrid ranking.
-- Build context builder.
-
-### Week 3 - Reasoning Layer
-
-- Build single reviewer.
-- Add bug, security, architecture, and performance analysis.
-- Merge reasoning outputs.
-- Generate structured reports.
-
-### Week 4 - Productization
-
-- Build YAML rule engine.
-- Add policy validation before LLM.
-- Integrate GitHub PR comments.
-- Add evaluation dataset.
-- Optimize latency and caching.
-- Release v1.0 MVP.
+| Principle | Direction |
+| --- | --- |
+| Do not duplicate mature tools | CodeInsight is not a replacement for GitHub Actions, CodeQL, Secret Scanning, Dependabot, Copilot Code Review, or Continue |
+| Rule first, LLM second | Deterministic policy and context extraction should be stable before adding LLM reasoning |
+| Structured output | Findings should stay machine-readable, traceable, testable, and suitable for GitHub PR comments |
+| Agent/LLM focus | Prioritize review rules for LLM calls, tool execution, prompt/schema safety, evaluation coverage, and agent boundaries |
+| Evaluation mindset | Future LLM review quality should be measured with datasets and metrics, not judged only by plausible prose |

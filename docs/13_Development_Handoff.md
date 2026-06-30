@@ -134,7 +134,7 @@ Implemented in `core/context/`:
 
 - Builds lightweight PR review context from changed files and repository snapshots.
 - Adds changed-file role summaries.
-- Adds touched Python symbols for changed files.
+- Adds directly touched Python symbols by matching added diff line numbers to symbol ranges.
 - Adds related imports for changed files.
 - Attaches file-level context metadata to each finding.
 
@@ -149,7 +149,7 @@ python -m pytest
 Last known result:
 
 ```text
-24 passed, 1 warning
+25 passed, 1 warning
 ```
 
 The warning is from FastAPI / Starlette TestClient dependency behavior and does not currently affect project behavior.
@@ -158,6 +158,26 @@ GitHub Actions CI exists at:
 
 ```text
 .github/workflows/ci.yml
+```
+
+### Evaluation Harness
+
+Not implemented yet.
+
+Current project testing is ordinary pytest and CI coverage. There is not yet a dedicated review/evaluation harness for measuring review quality.
+
+Future harness should include:
+
+- fixed diff or PR fixtures under `evaluation/datasets`
+- expected structured findings per sample
+- a replay command that runs the review pipeline against those samples
+- metrics for hit rate, false positives, false negatives, latency, and later LLM cost
+
+Keep this concept separate from pytest:
+
+```text
+pytest -> implementation correctness
+evaluation harness -> review quality over realistic examples
 ```
 
 ## Real Manual Test Already Done
@@ -320,24 +340,31 @@ Move deterministic rules toward YAML-backed configuration.
 
 Implemented as YAML-backed rule metadata while keeping detection logic deterministic and code-owned.
 
-Best next step now:
+Completed next step:
 
 ```text
 Make context extraction more precise.
 ```
 
-This would use changed line ranges to distinguish symbols that are directly touched from symbols that merely live in changed files.
+Implemented with added diff line numbers and Python symbol line ranges. Review context still keeps full file symbols, but top-level and finding-level `touched_symbols` now report directly touched symbols only.
+
+Best next step now:
+
+```text
+Add import-based related-file lookup.
+```
+
+This would connect changed-file imports to local repository files so review context can include nearby implementation files, not just import names.
 
 ## Near-Term Backlog
 
 High-value next tasks:
 
-- Use changed line ranges to identify directly touched symbols.
 - Add import-based related-file lookup.
 - Add config validation errors for malformed rule metadata.
 - Extract call-like references from Python AST.
 - Add confidence/source fields for future LLM findings.
-- Start an evaluation dataset under `evaluation/datasets`.
+- Start an evaluation harness with datasets under `evaluation/datasets`.
 - Add GitHub PR comment publishing.
 - Add async worker pipeline later.
 
@@ -375,4 +402,4 @@ core/review/service.py
 
 Suggested first question next session:
 
-> Continue by making context extraction more precise with changed line ranges and directly touched symbols.
+> Continue by adding import-based related-file lookup to review context.

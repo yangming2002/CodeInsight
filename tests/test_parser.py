@@ -1,6 +1,11 @@
 from pathlib import Path
 
-from core.parser import PythonAstParser, RepositoryStructureParser, parse_changed_files
+from core.parser import (
+    PythonAstParser,
+    RepositoryStructureParser,
+    parse_added_line_numbers,
+    parse_changed_files,
+)
 
 
 def test_parse_changed_files_tracks_modified_added_deleted_and_renamed_files() -> None:
@@ -47,6 +52,31 @@ rename to after.py
     assert files[2].deleted_lines == 1
     assert files[3].old_path == "before.py"
     assert files[3].new_path == "after.py"
+
+
+def test_parse_added_line_numbers_tracks_new_file_lines_by_path() -> None:
+    diff = """diff --git a/app.py b/app.py
+--- a/app.py
++++ b/app.py
+@@ -10,2 +10,4 @@
+ context = {}
++print("debug")
++value = 1
+ return context
+diff --git a/core/review/service.py b/core/review/service.py
+--- a/core/review/service.py
++++ b/core/review/service.py
+@@ -20,1 +20,2 @@
++review()
+ done()
+"""
+
+    added_lines = parse_added_line_numbers(diff)
+
+    assert added_lines == {
+        "app.py": {11, 12},
+        "core/review/service.py": {20},
+    }
 
 
 def test_repository_structure_parser_skips_excluded_dirs_and_infers_roles(tmp_path: Path) -> None:

@@ -15,6 +15,8 @@ CodeInsight is being built as a production-style AI engineering project, not a p
 - Repository symbol extraction.
 - One-call GitHub PR review API.
 - Agent / LLM deterministic review rules.
+- Lightweight review context with directly touched symbols.
+- YAML-backed implemented rule metadata.
 - Pytest test suite.
 - GitHub Actions CI.
 - Dockerfile.
@@ -43,12 +45,20 @@ CodeInsight is being built as a production-style AI engineering project, not a p
 - Add timeout, retry, and fallback handling.
 - Add a rule-first, LLM-second review pipeline.
 
+### Evaluation Harness
+
+- Create `evaluation/datasets` for fixed diff and PR review fixtures.
+- Define expected structured findings for each sample.
+- Add a replay command that runs the review pipeline against stored samples.
+- Report hit rate, false positives, false negatives, and latency.
+- Keep this separate from pytest: pytest checks implementation behavior, while the harness measures review quality.
+
 ## Mid-Term
 
 - GitHub PR comment publishing.
 - Async API + worker pipeline.
 - Review task status endpoint.
-- Evaluation datasets and metrics.
+- Evaluation harness datasets and metrics.
 - Latency and cost tracking.
 - Docker Compose for API, worker, Redis, and optional database.
 

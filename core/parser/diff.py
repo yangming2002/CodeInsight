@@ -85,6 +85,36 @@ def parse_changed_files(diff: str) -> list[ChangedFile]:
     return files
 
 
+def parse_added_line_numbers(diff: str) -> dict[str, set[int]]:
+    added_line_numbers: dict[str, set[int]] = {}
+    current_file = "unknown"
+    new_line_number: int | None = None
+
+    for raw_line in diff.splitlines():
+        if raw_line.startswith("+++ "):
+            new_path = _clean_diff_path(raw_line[4:].strip())
+            current_file = new_path or "unknown"
+            continue
+
+        if raw_line.startswith("@@"):
+            new_line_number = _parse_hunk_new_start(raw_line)
+            continue
+
+        if raw_line.startswith("+") and not raw_line.startswith("+++"):
+            if new_line_number is not None:
+                added_line_numbers.setdefault(current_file, set()).add(new_line_number)
+                new_line_number += 1
+            continue
+
+        if raw_line.startswith("-") and not raw_line.startswith("---"):
+            continue
+
+        if new_line_number is not None:
+            new_line_number += 1
+
+    return added_line_numbers
+
+
 class _MutableChangedFile:
     def __init__(self) -> None:
         self.old_path: str | None = None
@@ -125,3 +155,15 @@ def _clean_git_path(path: str) -> str:
     if path.startswith("a/") or path.startswith("b/"):
         return path[2:]
     return path
+
+
+def _parse_hunk_new_start(hunk_header: str) -> int | None:
+    marker_index = hunk_header.find("+")
+    if marker_index == -1:
+        return None
+    end_index = marker_index + 1
+    while end_index < len(hunk_header) and hunk_header[end_index].isdigit():
+        end_index += 1
+    if end_index == marker_index + 1:
+        return None
+    return int(hunk_header[marker_index + 1 : end_index])

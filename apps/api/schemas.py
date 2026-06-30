@@ -40,6 +40,7 @@ class ReviewContextFile(BaseModel):
     added_lines: int
     deleted_lines: int
     symbols: list[dict[str, object]]
+    touched_symbols: list[dict[str, object]]
     imports: list[dict[str, object]]
 
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from core.context import ReviewContextBuilder
-from core.parser import RepositoryStructureParser, parse_changed_files
+from core.parser import RepositoryStructureParser, parse_added_line_numbers, parse_changed_files
 from core.policy import PolicyEngine
 
 
@@ -13,8 +13,13 @@ def review_diff(
 ) -> dict[str, object]:
     findings = PolicyEngine().review(diff)
     changed_files = parse_changed_files(diff)
+    added_line_numbers = parse_added_line_numbers(diff)
     snapshot = RepositoryStructureParser().parse(repository_root or Path.cwd())
-    context = ReviewContextBuilder().build(changed_files=changed_files, snapshot=snapshot)
+    context = ReviewContextBuilder().build(
+        changed_files=changed_files,
+        snapshot=snapshot,
+        added_line_numbers=added_line_numbers,
+    )
     finding_dicts = []
     for finding in findings:
         finding_dict = finding.to_dict()
@@ -36,5 +41,5 @@ def review_diff(
         "context": context.to_dict(),
         "findings": finding_dicts,
         "finding_count": len(finding_dicts),
-        "llm_summary": "LLM reasoning is not enabled in MVP v0.",
+        "llm_summary": "LLM reasoning is not enabled yet.",
     }

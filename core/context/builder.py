@@ -13,6 +13,7 @@ class ReviewFileContext:
     added_lines: int
     deleted_lines: int
     symbols: list[PythonSymbol]
+    touched_symbols: list[PythonSymbol]
     imports: list[PythonImport]
 
     def to_dict(self) -> dict[str, object]:
@@ -23,6 +24,7 @@ class ReviewFileContext:
             "added_lines": self.added_lines,
             "deleted_lines": self.deleted_lines,
             "symbols": [symbol.to_dict() for symbol in self.symbols],
+            "touched_symbols": [symbol.to_dict() for symbol in self.touched_symbols],
             "imports": [import_.to_dict() for import_ in self.imports],
         }
 
@@ -55,7 +57,7 @@ class ReviewContext:
 
         return FindingContext(
             file_role=file_context.role,
-            touched_symbols=[_format_symbol(symbol) for symbol in file_context.symbols],
+            touched_symbols=[_format_symbol(symbol) for symbol in file_context.touched_symbols],
             related_imports=[_format_import(import_) for import_ in file_context.imports],
         )
 
@@ -69,15 +71,22 @@ class ReviewContext:
 
 
 class ReviewContextBuilder:
-    def build(self, changed_files: list[ChangedFile], snapshot: RepositorySnapshot) -> ReviewContext:
+    def build(
+        self,
+        changed_files: list[ChangedFile],
+        snapshot: RepositorySnapshot,
+        added_line_numbers: dict[str, set[int]] | None = None,
+    ) -> ReviewContext:
         files_by_path = {file.path: file for file in snapshot.files}
         symbols_by_file = _group_by_file(snapshot.symbols)
         imports_by_file = _group_by_file(snapshot.imports)
+        added_line_numbers = added_line_numbers or {}
 
         file_contexts: list[ReviewFileContext] = []
         for changed_file in changed_files:
             path = changed_file.path
             repository_file = files_by_path.get(path)
+            symbols = symbols_by_file.get(path, [])
             file_contexts.append(
                 ReviewFileContext(
                     path=path,
@@ -85,14 +94,18 @@ class ReviewContextBuilder:
                     status=changed_file.status,
                     added_lines=changed_file.added_lines,
                     deleted_lines=changed_file.deleted_lines,
-                    symbols=symbols_by_file.get(path, []),
+                    symbols=symbols,
+                    touched_symbols=_filter_touched_symbols(
+                        symbols=symbols,
+                        added_lines=added_line_numbers.get(path, set()),
+                    ),
                     imports=imports_by_file.get(path, []),
                 )
             )
 
         changed_file_roles = sorted({file.role for file in file_contexts})
         touched_symbols = sorted(
-            {_format_symbol(symbol) for file in file_contexts for symbol in file.symbols}
+            {_format_symbol(symbol) for file in file_contexts for symbol in file.touched_symbols}
         )
         related_imports = sorted(
             {_format_import(import_) for file in file_contexts for import_ in file.imports}
@@ -123,3 +136,21 @@ def _format_import(import_: PythonImport) -> str:
     if import_.name:
         return f"{import_.module}.{import_.name}"
     return import_.module
+
+
+def _filter_touched_symbols(
+    symbols: list[PythonSymbol],
+    added_lines: set[int],
+) -> list[PythonSymbol]:
+    if not added_lines:
+        return []
+    return [
+        symbol
+        for symbol in symbols
+        if any(_symbol_contains_line(symbol=symbol, line=line) for line in added_lines)
+    ]
+
+
+def _symbol_contains_line(symbol: PythonSymbol, line: int) -> bool:
+    end_line = symbol.end_line or symbol.line
+    return symbol.line <= line <= end_line

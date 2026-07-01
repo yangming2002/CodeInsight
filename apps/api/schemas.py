@@ -42,12 +42,14 @@ class ReviewContextFile(BaseModel):
     symbols: list[dict[str, object]]
     touched_symbols: list[dict[str, object]]
     imports: list[dict[str, object]]
+    related_files: list[dict[str, object]]
 
 
 class ReviewContext(BaseModel):
     changed_file_roles: list[str]
     touched_symbols: list[str]
     related_imports: list[str]
+    related_files: list[dict[str, object]]
     files: list[ReviewContextFile]
 
 

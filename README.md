@@ -13,7 +13,7 @@ CodeInsight is a GitHub Pull Request review system for Agent and LLM engineering
 | Diff parsing | Parse changed files, statuses, added/deleted line counts, and added line numbers from unified diffs |
 | Repository parsing | Scan local repository files, infer file roles, and skip common generated or dependency directories |
 | Python AST parsing | Extract Python classes, functions, async functions, parent relationships, and imports |
-| Review context | Attach changed-file roles, related imports, and directly touched symbols to structured review reports |
+| Review context | Attach changed-file roles, related imports, directly touched symbols, and import-based related files to structured review reports |
 | Policy engine | Run deterministic checks before LLM reasoning |
 | Rule metadata | Load implemented rule titles, severities, categories, and descriptions from `configs/rules.yaml` |
 | Agent/LLM rules | Detect LLM calls without timeout, unsafe `shell=True`, and unvalidated JSON parsing of likely model output |
@@ -25,7 +25,7 @@ CodeInsight is a GitHub Pull Request review system for Agent and LLM engineering
 
 | Area | Future Capability |
 | --- | --- |
-| Context precision | Expand changed-line and symbol matching, add import-based related-file lookup, and extract call-like references |
+| Context precision | Expand symbol matching, improve related-file ranking, and extract call-like references |
 | Rule system | Add validation for malformed rule metadata and gradually support project-specific configurable policies |
 | GitHub review workflow | Publish structured findings as GitHub PR comments |
 | LLM reasoning | Add LLM reviewer stages after deterministic context and policy inputs are stable |
@@ -95,6 +95,7 @@ Example response:
     "changed_file_roles": ["unknown"],
     "touched_symbols": [],
     "related_imports": [],
+    "related_files": [],
     "files": [
       {
         "path": "app.py",
@@ -104,7 +105,8 @@ Example response:
         "deleted_lines": 0,
         "symbols": [],
         "touched_symbols": [],
-        "imports": []
+        "imports": [],
+        "related_files": []
       }
     ]
   },
@@ -121,7 +123,8 @@ Example response:
       "context": {
         "file_role": "unknown",
         "touched_symbols": [],
-        "related_imports": []
+        "related_imports": [],
+        "related_files": []
       }
     },
     {
@@ -136,7 +139,8 @@ Example response:
       "context": {
         "file_role": "unknown",
         "touched_symbols": [],
-        "related_imports": []
+        "related_imports": [],
+        "related_files": []
       }
     }
   ],

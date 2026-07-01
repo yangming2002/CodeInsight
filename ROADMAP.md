@@ -16,6 +16,7 @@ CodeInsight is being built as a production-style AI engineering project, not a p
 - One-call GitHub PR review API.
 - Agent / LLM deterministic review rules.
 - Lightweight review context with directly touched symbols.
+- Import-based related-file lookup.
 - YAML-backed implemented rule metadata.
 - Pytest test suite.
 - GitHub Actions CI.
@@ -29,7 +30,7 @@ CodeInsight is being built as a production-style AI engineering project, not a p
 - Attach repository role context to review findings.
 - Improve changed-file summaries for multi-file PRs.
 - Extract call-like references from Python AST.
-- Add related-file lookup from imports and symbols.
+- Improve related-file ranking from imports and symbols.
 
 ### Policy Engine
 

@@ -136,6 +136,7 @@ Implemented in `core/context/`:
 - Adds changed-file role summaries.
 - Adds directly touched Python symbols by matching added diff line numbers to symbol ranges.
 - Adds related imports for changed files.
+- Adds import-based related-file lookup for repository-local Python files.
 - Attaches file-level context metadata to each finding.
 
 ### Testing / CI
@@ -348,19 +349,26 @@ Make context extraction more precise.
 
 Implemented with added diff line numbers and Python symbol line ranges. Review context still keeps full file symbols, but top-level and finding-level `touched_symbols` now report directly touched symbols only.
 
-Best next step now:
+Completed next step:
 
 ```text
 Add import-based related-file lookup.
 ```
 
-This would connect changed-file imports to local repository files so review context can include nearby implementation files, not just import names.
+Implemented by mapping changed-file imports to repository-local Python files and imported symbol definitions.
+
+Best next step now:
+
+```text
+Add config validation errors for malformed rule metadata.
+```
+
+This would make `configs/rules.yaml` safer before rule metadata becomes more important to review output.
 
 ## Near-Term Backlog
 
 High-value next tasks:
 
-- Add import-based related-file lookup.
 - Add config validation errors for malformed rule metadata.
 - Extract call-like references from Python AST.
 - Add confidence/source fields for future LLM findings.
@@ -402,4 +410,4 @@ core/review/service.py
 
 Suggested first question next session:
 
-> Continue by adding import-based related-file lookup to review context.
+> Continue by adding config validation errors for malformed rule metadata.
